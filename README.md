@@ -1,53 +1,114 @@
 # PedRefTrack
 
-PedRefTrack is a pure-Python 3D pedestrian tracker with a general ROS2 Humble adapter. The node consumes prepared `vision_msgs/msg/Detection3DArray` bounding boxes, runs normal detector-only tracking, and publishes both `pedestrian_tracking_msgs/msg/TrackedPedestrianArray` and optional tracked `Detection3DArray` boxes.
+PedRefTrack is a pure-Python 3D pedestrian tracker with a detector-agnostic ROS 2 Humble adapter. The ROS node consumes prepared [`vision_msgs/msg/Detection3DArray`](https://docs.ros.org/en/humble/p/vision_msgs/msg/Detection3DArray.html) bounding boxes, performs detector-only tracking, and publishes pedestrian trajectories as `pedestrian_tracking_msgs/msg/TrackedPedestrianArray`. It can also publish the tracked bounding boxes as a `Detection3DArray`.
 
-The benchmark-compatible implementation is also bundled in [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) behind `pedreftrack_adapter.py`. The core in `pedreftrack/core.py` is ROS-independent and functionally shared between both repositories.
+The benchmark-compatible implementation is also bundled in [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) behind `pedreftrack_adapter.py`. The ROS-independent core in `ros2/pedreftrack/pedreftrack/core.py` is maintained consistently with the evaluation implementation.
+
+## Repository structure
+
+This repository contains two ROS 2 packages:
+
+```text
+PedRefTrack/
+├── README.md
+├── LICENSE
+└── ros2/
+    ├── pedreftrack/
+    │   ├── package.xml
+    │   ├── setup.py
+    │   ├── setup.cfg
+    │   ├── config/
+    │   ├── launch/
+    │   ├── resource/
+    │   └── pedreftrack/
+    └── pedestrian_tracking_msgs/
+        ├── package.xml
+        ├── CMakeLists.txt
+        └── msg/
+            ├── TrackedPedestrian.msg
+            └── TrackedPedestrianArray.msg
+```
+
+`pedestrian_tracking_msgs` remains an independent ROS 2 interface package even though it is distributed in the same Git repository. Once the workspace is built and sourced, its generated message types are available to any ROS 2 package in that environment.
+
+Only one source copy of `pedestrian_tracking_msgs` should be present in a colcon workspace.
 
 ## Platform and dependencies
 
 - Ubuntu 22.04
-- ROS2 Humble
+- ROS 2 Humble
 - Python 3.10
-- `vision_msgs`, `tf2_ros`, NumPy and SciPy
-- the existing `pedestrian_tracking_msgs` package in the same colcon workspace
-
-`pedestrian_tracking_msgs` is intentionally not duplicated here.
+- `rclpy`
+- `vision_msgs`
+- `geometry_msgs`
+- `std_msgs`
+- `tf2_ros`
+- NumPy and SciPy
+- the bundled `pedestrian_tracking_msgs` package
 
 ## Build
 
-Place this repository beside your existing message package:
+Clone this repository anywhere below the `src` directory of a ROS 2 workspace:
 
 ```text
-ros2_ws/src/
-├── PedRefTrack/
-└── pedestrian_tracking_msgs/
+ros2_ws/
+└── src/
+    └── PedRefTrack/
+        └── ros2/
+            ├── pedreftrack/
+            └── pedestrian_tracking_msgs/
 ```
 
-Then build normally:
+Install the dependencies and build both packages:
 
 ```bash
 cd ~/ros2_ws
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install --packages-select pedestrian_tracking_msgs pedreftrack
+
+source /opt/ros/humble/setup.bash
+
+rosdep install \
+  --from-paths src \
+  --ignore-src \
+  --rosdistro humble \
+  -r -y
+
+colcon build \
+  --symlink-install \
+  --packages-select \
+    pedestrian_tracking_msgs \
+    pedreftrack
+
 source install/setup.bash
+```
+
+Verify the installation:
+
+```bash
+ros2 pkg prefix pedestrian_tracking_msgs
+ros2 pkg prefix pedreftrack
+
+ros2 interface show \
+  pedestrian_tracking_msgs/msg/TrackedPedestrianArray
 ```
 
 ## Run
 
 ```bash
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
+
 ros2 launch pedreftrack pedreftrack.launch.py
 ```
 
-Default topics:
+Default interfaces:
 
 | Direction | Topic | Type |
 |---|---|---|
-| input | `/pedestrian_detections_3d` | `vision_msgs/Detection3DArray` |
-| output | `/tracked_pedestrians` | `pedestrian_tracking_msgs/TrackedPedestrianArray` |
-| optional output | `/pedreftrack/tracked_detections_3d` | `vision_msgs/Detection3DArray` |
+| Input | `/pedestrian_detections_3d` | `vision_msgs/msg/Detection3DArray` |
+| Output | `/tracked_pedestrians` | `pedestrian_tracking_msgs/msg/TrackedPedestrianArray` |
+| Optional output | `/pedreftrack/tracked_detections_3d` | `vision_msgs/msg/Detection3DArray` |
 
-Override topics or frames with parameters:
+Override topics or frames with ROS parameters:
 
 ```bash
 ros2 run pedreftrack pedreftrack_node --ros-args \
@@ -56,7 +117,7 @@ ros2 run pedreftrack pedreftrack_node --ros-args \
   -p output_topic:=/tracked_pedestrians
 ```
 
-If `tracking_frame` is empty, boxes are tracked in the incoming message frame. If it is set, the node looks up a timestamped TF transform and publishes in that frame. The input header frame must be non-empty.
+If `tracking_frame` is empty, boxes are tracked in the frame specified by the incoming message. If it is set, the node looks up a timestamped TF transform and tracks and publishes in that frame. `Detection3DArray.header.frame_id` must not be empty.
 
 ## Detection mapping
 
@@ -64,15 +125,35 @@ For every input `Detection3D`:
 
 - `bbox.center.position` becomes `(cx, cy, cz)`;
 - `bbox.size.{x,y,z}` becomes `(length, width, height)`;
-- bbox quaternion yaw becomes `rot_z`;
-- the highest-scoring hypothesis supplies confidence and class;
+- the bounding-box quaternion yaw becomes `rot_z`;
+- the highest-scoring hypothesis supplies the confidence and class;
 - `pedestrian_class_id` filters non-pedestrian hypotheses when set.
 
-Tracked box IDs are written to `Detection3D.id`. The compact custom output contains ID, XY position, EMA velocity and configured radius. Velocity is an adapter output estimate; it does not change PedRefTrack association.
+Tracked box IDs are written to `Detection3D.id`. The compact custom output contains the track ID, XY position, EMA-smoothed velocity, and configured pedestrian radius. The velocity is estimated by the ROS adapter for publication and does not affect PedRefTrack association.
 
-## Tracker parameters
+## Custom tracking messages
 
-`config/pedreftrack.yaml` exposes every PedRefTrack parameter present in the tracker-evaluation CLI, with identical defaults:
+`pedestrian_tracking_msgs/msg/TrackedPedestrian` contains:
+
+```text
+uint32 track_id
+float32 x
+float32 y
+float32 vx
+float32 vy
+float32 radius
+```
+
+`pedestrian_tracking_msgs/msg/TrackedPedestrianArray` contains:
+
+```text
+std_msgs/Header header
+TrackedPedestrian[] pedestrians
+```
+
+## Configuration
+
+The default ROS configuration is stored in `ros2/pedreftrack/config/pedreftrack.yaml`. It exposes every PedRefTrack parameter present in the tracker-evaluation CLI, using the same defaults:
 
 | Parameter | Default |
 |---|---:|
@@ -94,11 +175,11 @@ Tracked box IDs are written to `Detection3D.id`. The compact custom output conta
 | `tracker.z_gate_m` | 0.5 |
 | `tracker.kf_max_gate_m` | 1.0 |
 
-The ROS node deliberately does not expose or implement GT-assisted mode. That diagnostic mode remains available only in `tracker_eval`.
+The ROS node deliberately implements detector-only tracking and does not expose GT-assisted mode. GT-assisted operation is a diagnostic evaluation mode available only in [`tracker_eval`](https://github.com/SCAI-Lab/tracker_eval).
 
 ## Pure-Python use
 
-The core accepts lightweight `Detection` objects without ROS:
+The tracker core accepts lightweight `Detection` objects and does not depend on ROS:
 
 ```python
 from pedreftrack import Box3D, Detection, PedRefTrack
@@ -106,9 +187,18 @@ from pedreftrack import Box3D, Detection, PedRefTrack
 tracker = PedRefTrack()
 tracks = tracker.step(
     "0",
-    [Detection("0", -1, Box3D(2.0, 0.0, 0.85, 0.5, 0.5, 1.7, 0.0), 0.9)],
+    [
+        Detection(
+            "0",
+            -1,
+            Box3D(2.0, 0.0, 0.85, 0.5, 0.5, 1.7, 0.0),
+            0.9,
+        )
+    ],
     timestamp=0.0,
 )
 ```
 
-MIT licensed.
+## License
+
+Both ROS 2 packages in this repository are licensed under the MIT License.
