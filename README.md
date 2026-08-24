@@ -1,10 +1,10 @@
 # PedRefTrack
 
-PedRefTrack is a lightweight online 3D pedestrian tracker designed for embedded robotic perception and social navigation. It tracks pedestrians from 3D bounding-box detections and maintains trajectories through short-term occlusions and missed observations. The tracking core is implemented in pure Python and is accompanied by a ROS 2 Humble interface for deployment on robotic platforms.
+**PedRefTrack is a lightweight online 3D pedestrian tracker designed for embedded robotic perception and navigation in pedestrian-centric environments.** It converts frame-wise 3D bounding-box detections into temporally consistent pedestrian trajectories, with particular emphasis on smart track initialization, credible continuation through missed detections, and identity-preserving recovery after temporary occlusions. The pure-Python core runs above 10Hz online on a single Nvidia Jetson Orin CPU core, making PedRefTrack well suited to compute-constrained robotic platforms.
 
-The repository provides a ROS 2 Humble integration that consumes [`vision_msgs/msg/Detection3DArray`](https://docs.ros.org/en/humble/p/vision_msgs/msg/Detection3DArray.html) detections and publishes pedestrian trajectories as `pedestrian_tracking_msgs/msg/TrackedPedestrianArray`. Tracked bounding boxes can additionally be published as a `Detection3DArray`.
+The repository provides a ROS 2 Humble interface that consumes vision_msgs/msg/Detection3DArray detections and publishes pedestrian trajectories as pedestrian_tracking_msgs/msg/TrackedPedestrianArray. Tracked bounding boxes can additionally be published as a Detection3DArray.
 
-A benchmark-compatible version of the tracker is bundled with [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) through `pedreftrack_adapter.py`. The ROS-independent tracking core is maintained consistently between both repositories, while `tracker_eval` additionally provides the GT-assisted diagnostic configuration used for evaluation.
+A benchmark-compatible implementation is bundled with SCAI-Lab/tracker_eval through pedreftrack_adapter.py. The ROS-independent core is maintained consistently between both repositories, while tracker_eval additionally provides the GT-assisted diagnostic configuration used to study motion prediction, detector-gap continuation, and identity recovery under the deployment-oriented tracking protocol.
 
 
 ## Repository structure
