@@ -2,8 +2,6 @@
 
 PedRefTrack is a pure-Python 3D pedestrian tracker with a general ROS2 Humble adapter. The node consumes prepared `vision_msgs/msg/Detection3DArray` bounding boxes, runs normal detector-only tracking, and publishes both `pedestrian_tracking_msgs/msg/TrackedPedestrianArray` and optional tracked `Detection3DArray` boxes.
 
-This repository has no dependency on `m_detector` or a particular point-cloud detector. A separate `dynout_pedestrian_detector` package can convert `/m_detector/dyn_out` into the standard input message when needed.
-
 The benchmark-compatible implementation is also bundled in [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) behind `pedreftrack_adapter.py`. The core in `pedreftrack/core.py` is ROS-independent and functionally shared between both repositories.
 
 ## Platform and dependencies
