@@ -1,6 +1,6 @@
 # PedRefTrack
 
-**Detector-agnostic 3D pedestrian tracking for robotic perception.**
+**Lightweight online 3D pedestrian tracker for embedded robotic perception and social navigation.**
 
 PedRefTrack is an online 3D multi-object tracker designed for pedestrian tracking in robotic applications. Its tracking core is implemented in pure Python and operates directly on 3D bounding-box detections, without depending on a particular detector or ROS.
 
