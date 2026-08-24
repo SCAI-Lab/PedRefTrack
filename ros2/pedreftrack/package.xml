@@ -3,7 +3,7 @@
   <name>pedreftrack</name>
   <version>1.0.0</version>
   <description>General Detection3DArray ROS2 deployment adapter for PedRefTrack.</description>
-  <maintainer email="draxran@users.noreply.github.com">Draxran</maintainer>
+  <maintainer email="dwojcikie@ethz.ch">Draxran</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
