@@ -1,0 +1,29 @@
+/**:
+  ros__parameters:
+    input_topic: "/pedestrian_detections_3d"
+    output_topic: "/tracked_pedestrians"
+    tracked_detections_topic: "/pedreftrack/tracked_detections_3d"
+    tracking_frame: ""
+    pedestrian_class_id: "pedestrian"
+    publish_tracked_detections: true
+    radius_m: 0.25
+    velocity_ema_alpha: 0.5
+
+    tracker:
+      fps: 15.0
+      T_reid_base_s: 2.5
+      T_reid_static_s: 5.0
+      confirmation_target_s: 0.25
+      confirmation_one_hit_score: 0.95
+      confirmation_min_score: 0.50
+      tentative_max_gap_s: 0.50
+      motion_robustness_history_s: 1.00
+      motion_robustness_immediate_history_s: 0.25
+      motion_error_free_m: 0.05
+      motion_error_half_decay_m: 0.038
+      T_out_min_s: 0.50
+      T_out_max_s: 2.0
+      assoc_iou_first_pass_thr: 0.33
+      dist_gate_m: 0.4
+      z_gate_m: 0.5
+      kf_max_gate_m: 1.0
