@@ -31,8 +31,6 @@ PedRefTrack/
 
 `pedestrian_tracking_msgs` remains an independent ROS 2 interface package even though it is distributed in the same Git repository. Once the workspace is built and sourced, its generated message types are available to any ROS 2 package in that environment.
 
-Only one source copy of `pedestrian_tracking_msgs` should be present in a colcon workspace.
-
 ## Platform and dependencies
 
 - Ubuntu 22.04
