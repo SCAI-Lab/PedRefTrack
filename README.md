@@ -1,8 +1,6 @@
 # PedRefTrack
 
-**Lightweight online 3D pedestrian tracker for embedded robotic perception and social navigation.**
-
-PedRefTrack is an online 3D multi-object tracker designed for pedestrian tracking in robotic applications. Its tracking core is implemented in pure Python and operates directly on 3D bounding-box detections, without depending on a particular detector or ROS.
+PedRefTrack is a lightweight online 3D pedestrian tracker designed for embedded robotic perception and social navigation. It tracks pedestrians from 3D bounding-box detections and maintains trajectories through short-term occlusions and missed observations. The tracking core is implemented in pure Python and is accompanied by a ROS 2 Humble interface for deployment on robotic platforms.
 
 The repository provides a ROS 2 Humble integration that consumes [`vision_msgs/msg/Detection3DArray`](https://docs.ros.org/en/humble/p/vision_msgs/msg/Detection3DArray.html) detections and publishes pedestrian trajectories as `pedestrian_tracking_msgs/msg/TrackedPedestrianArray`. Tracked bounding boxes can additionally be published as a `Detection3DArray`.
 
