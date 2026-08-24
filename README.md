@@ -1,8 +1,13 @@
 # PedRefTrack
 
-PedRefTrack is a pure-Python 3D pedestrian tracker with a detector-agnostic ROS 2 Humble adapter. The ROS node consumes prepared [`vision_msgs/msg/Detection3DArray`](https://docs.ros.org/en/humble/p/vision_msgs/msg/Detection3DArray.html) bounding boxes, performs detector-only tracking, and publishes pedestrian trajectories as `pedestrian_tracking_msgs/msg/TrackedPedestrianArray`. It can also publish the tracked bounding boxes as a `Detection3DArray`.
+**Detector-agnostic 3D pedestrian tracking for robotic perception.**
 
-The benchmark-compatible implementation is also bundled in [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) behind `pedreftrack_adapter.py`. The ROS-independent core in `ros2/pedreftrack/pedreftrack/core.py` is maintained consistently with the evaluation implementation.
+PedRefTrack is an online 3D multi-object tracker designed for pedestrian tracking in robotic applications. Its tracking core is implemented in pure Python and operates directly on 3D bounding-box detections, without depending on a particular detector or ROS.
+
+The repository provides a ROS 2 Humble integration that consumes [`vision_msgs/msg/Detection3DArray`](https://docs.ros.org/en/humble/p/vision_msgs/msg/Detection3DArray.html) detections and publishes pedestrian trajectories as `pedestrian_tracking_msgs/msg/TrackedPedestrianArray`. Tracked bounding boxes can additionally be published as a `Detection3DArray`.
+
+A benchmark-compatible version of the tracker is bundled with [SCAI-Lab/tracker_eval](https://github.com/SCAI-Lab/tracker_eval) through `pedreftrack_adapter.py`. The ROS-independent tracking core is maintained consistently between both repositories, while `tracker_eval` additionally provides the GT-assisted diagnostic configuration used for evaluation.
+
 
 ## Repository structure
 
